@@ -16,7 +16,7 @@ function loadCodes() {
       return JSON.parse(process.env.ACTIVATION_CODES);
     }
   } catch (_) {}
-  // 备选：内置示例（上线可删除）
+  // 备选：内置示例（上线建议删除，或只保留环境变量配置）
   return { 'ACT-2025-1234-ABCD': '2025-12-31', 'ACT-2025-5678-EFGH': '2025-12-31' };
 }
 
@@ -53,7 +53,10 @@ export default async function handler(req, res) {
     const sig = signToken(payload, secret);
     const token = Buffer.from(payload).toString('base64') + '.' + sig;
 
-    return res.status(200).json({ ok: true, token, expiresAt });
+    // 新增：返回可读到期时间（本地时区字符串）
+    const expiresText = new Date(expiresAt).toLocaleString();
+
+    return res.status(200).json({ ok: true, token, expiresAt, expiresText });
   } catch (e) {
     return res.status(200).json({ ok: false, message: 'Server error' });
   }
