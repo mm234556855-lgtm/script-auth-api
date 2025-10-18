@@ -8,14 +8,28 @@ function cors(res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 function nowMs() { return Date.now(); }
-function toMs(dateStr) { return new Date(`${dateStr}T23:59:59Z`).getTime(); }
+function toMs(dateStr) { 
+  // 支持两种格式：
+  // 1. "2025-10-18" (只有日期)
+  // 2. "2025-10-18 16:00" (日期+时间)
+  if (dateStr.includes(' ')) {
+    // 包含时间，直接解析
+    return new Date(dateStr).getTime();
+  } else {
+    // 只有日期，设置为当天23:59:59
+    return new Date(`${dateStr}T23:59:59Z`).getTime();
+  }
+}
 
 function loadCodes() {
   try {
     if (process.env.ACTIVATION_CODES) return JSON.parse(process.env.ACTIVATION_CODES);
   } catch (_) {}
-  // 示例：仅用于本地/测试，上线建议只用环境变量
-  return { 'ACT-2025-1234-ABCD': '2025-12-31', 'ACT-2025-5678-EFGH': '2025-12-31' };
+  // 示例：支持精确到分钟的时间格式
+  return { 
+    'ACT-2025-1234-ABCD': '2025-12-31 23:59', 
+    'ACT-2025-5678-EFGH': '2025-12-31 16:00' 
+  };
 }
 function signToken(payload, secret) {
   return crypto.createHmac('sha256', secret).update(payload).digest('hex');
